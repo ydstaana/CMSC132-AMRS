@@ -3,9 +3,9 @@ public class Register{
 	private int intValue; // register can contain a value --R1,R32-- --ZF,NF-- ex. R1 = 0
 	private String instValue; //register can contain an address/instruction --MAR,PC-- ex. MAR = "LOAD R1, R2"
 
-	public Register(String name){
+	public Register(String name, Integer intValue){
 		this.name = name;
-		this.intValue = 0;
+		this.intValue = intValue;
 		this.instValue = "";
 	}
 
