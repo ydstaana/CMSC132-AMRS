@@ -93,14 +93,6 @@ public class AMRS{
 		 }catch(Exception e){
 		 	e.printStackTrace();
 		 }
-		
-
-
-		
-	
-			
-			
-
 	}
 
 
@@ -108,7 +100,14 @@ public class AMRS{
 		//Get instruction address from PC, store in MAR
 		//Access memory, get instruction with address MAR, store to MBR
 		Instruction tempInst =null;
-
+		while(physicalMemory.tryLock() == true){ 
+			try{
+				System.out.println("STALLING FETCH..." + Thread.currentThread().getName() + " AT CLOCK CYCLE " + clock_cycle);
+				Thread.sleep(1000);
+			}catch(InterruptedException e){
+				e.printStackTrace();
+			}
+		}
 		if(PC < physicalMemory.getInstructions().size() + 1){
 			physicalMemory.lock();
 	       	registers.get("MAR").setIntValue(PC);
@@ -125,7 +124,7 @@ public class AMRS{
 	    	decode(registers.get("IR"));
 	    }catch(InterruptedException e){
 	    	e.printStackTrace();
-	    }
+	    }	
 	}
 
 	public static void decode(Register CurrentInstructionRegister){
@@ -150,8 +149,12 @@ public class AMRS{
 				}
 			}
 			System.out.println("DECODING..." + 	Thread.currentThread().getName() + " AT CLOCK CYCLE " + clock_cycle);
+			regOp1.lock();
+			System.out.println(regOp1.getName() + " " + "is locked");
 			op2 = instruction.getIntOp2();
 			values.add(op2);
+			regOp1.unlock();
+
 		}
 		else{
 			values.add(regOp2);
@@ -163,9 +166,17 @@ public class AMRS{
 					e.printStackTrace();
 				}
 			}
+			System.out.println(regOp1.getName() + " " + "is locked");
+			System.out.println(regOp2.getName() + " " + "is locked");
+			regOp1.lock();
+			regOp2.lock();
 			System.out.println("DECODING..." + Thread.currentThread().getName() + " AT CLOCK CYCLE " + clock_cycle);
-			
+			System.out.println(regOp1.getName() + " " + "is unlocked");
+			System.out.println(regOp2.getName() + " " + "is unlocked");
+			regOp1.unlock();
+			regOp2.unlock();
 		}
+
 		try{
 			Thread.sleep(900);
 			if(operator.equals("LOAD")){
@@ -297,8 +308,6 @@ public class AMRS{
 		System.out.println("MEMORY....." + Thread.currentThread().getName() + " AT CLOCK CYCLE " + clock_cycle);
 		physicalMemory.lock();
 		
-		memoryOperand1.lock();
-		System.out.println(memoryOperand1.getName() + " IS LOCKED");
 		
 		try{
 			if(operator.equals("LOAD")){
@@ -310,6 +319,8 @@ public class AMRS{
 				writeBack(operator,memoryOperand1, intMemoryOperand2);
 			}
 			else{
+				memoryOperand1.lock();
+				System.out.println(memoryOperand1.getName() + " IS LOCKED");
 				Thread.sleep(1000);
 				physicalMemory.unlock();
 				memoryOperand1.unlock();
